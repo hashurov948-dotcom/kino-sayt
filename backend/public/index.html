@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CinePortal — Universal Kino & Telegram Ekotizimi</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { red: '#E50914', dark: '#060608', card: '#111115' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google 1-Bosishda Kirish -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    body { background-color: #060608; color: #f4f4f5; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .nav-active { color: #E50914 !important; font-weight: 800; border-bottom: 3px solid #E50914; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-red-600 selection:text-white w-full text-sm">
+
+  <!-- 1. YUQORI NAVBAR (TO'LIQ EKRAN) -->
+  <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-zinc-800/90 w-full px-4 sm:px-8 lg:px-12">
+    <div class="w-full h-20 flex items-center justify-between gap-6">
+      
+      <!-- Brend Logo va 4 ta Asosiy Sahifa -->
+      <div class="flex items-center gap-10">
+        <a href="javascript:showPage('home')" class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-red-600 flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-red-600/40">C</div>
+          <div>
+            <span class="font-black text-xl tracking-wider text-white">CINE<span class="text-red-600">PORTAL</span></span>
+            <span class="block text-xs text-zinc-400 font-bold tracking-widest uppercase">Ekotizim & Telegram</span>
+          </div>
+        </a>
+
+        <!-- Sahifalar Navigatsiyasi (Kattalashtirilgan) -->
+        <nav class="hidden md:flex items-center gap-8 text-sm font-bold text-zinc-400">
+          <button onclick="showPage('home')" id="tab-home" class="nav-active py-6 transition hover:text-white">Bosh sahifa</button>
+          <button onclick="showPage('catalog')" id="tab-catalog" class="py-6 transition hover:text-white">Katalog</button>
+          <button onclick="showPage('saved')" id="tab-saved" class="py-6 transition hover:text-white flex items-center gap-1.5">
+            Saqlanganlar <span id="savedCountBadge" class="bg-red-600 text-white rounded-full px-2 py-0.5 text-xs font-black">0</span>
+          </button>
+          <button onclick="showPage('admin')" id="tab-admin" class="hidden py-6 text-amber-400 font-extrabold transition hover:text-amber-300">👑 Admin Panel</button>
+        </nav>
+      </div>
+
+      <!-- Qidiruv Maydoni (Katta va qulay) -->
+      <div class="flex-1 max-w-md hidden sm:block">
+        <div class="relative">
+          <input type="text" id="searchInput" oninput="searchMovies()" placeholder="Kino nomi yoki maxsus kodini kiriting (masalan: 1 yoki 1001)..." class="w-full bg-zinc-900 border border-zinc-700/80 rounded-full px-5 py-3 pl-12 text-sm text-white focus:outline-none focus:border-red-600 transition shadow-inner">
+          <span class="absolute left-4 top-3 text-zinc-400 text-base">🔍</span>
+        </div>
+      </div>
+
+      <!-- CineMind AI va Profil -->
+      <div class="flex items-center gap-4">
+        <button onclick="openAiModal()" class="px-5 py-2.5 rounded-full text-sm font-extrabold bg-zinc-900 border border-zinc-700 text-zinc-100 hover:border-red-600 transition flex items-center gap-2 shadow-lg">
+          <span class="animate-pulse text-base">🤖</span> CineMind AI
+        </button>
+
+        <div id="authContainer">
+          <button onclick="openAuthModal()" class="px-6 py-2.5 rounded-full text-sm font-bold bg-zinc-800 text-white hover:bg-zinc-700 transition shadow-md">
+            Kirish
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== 1-SAHIFA: BOSH SAHIFA ==================== -->
+  <main id="page-home" class="page-view flex-1 w-full">
+    <!-- Hero Banner -->
+    <div class="relative w-full h-[520px] md:h-[640px] overflow-hidden bg-zinc-950 flex items-end">
+      <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1920&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-65" alt="Hero Banner">
+      <div class="absolute inset-0 bg-gradient-to-t from-[#060608] via-black/40 to-transparent"></div>
+      <div class="relative w-full px-4 sm:px-8 lg:px-12 pb-16">
+        <div class="flex items-center gap-2.5 mb-3">
+          <span class="px-3.5 py-1 rounded-md text-xs font-black bg-red-600 text-white uppercase tracking-wider">Premyera 4K</span>
+          <span class="text-amber-400 text-sm font-bold">★ 9.8 Reyting</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black text-white max-w-4xl drop-shadow-xl tracking-tight">Avatar: Suv Yo‘li</h1>
+        <p class="text-sm md:text-base text-zinc-300 mt-3 max-w-2xl line-clamp-2 drop-shadow leading-relaxed">Pandora sayyorasining go‘zal okean olami va yangi xavf-xatarlar haqida jahon kinosining eng yirik durdonasi.</p>
+        <div class="mt-8 flex flex-wrap gap-4">
+          <button onclick="playMovie('1001')" class="px-8 py-3.5 rounded-full bg-red-600 text-white font-extrabold text-sm hover:bg-red-700 transition shadow-xl shadow-red-600/40 flex items-center gap-2.5">
+            <span class="text-base">▶</span> Tomosha qilish
+          </button>
+          <button onclick="downloadMovieDirect('1001')" class="px-8 py-3.5 rounded-full bg-zinc-900 border border-zinc-700 text-white font-extrabold text-sm hover:bg-zinc-800 transition flex items-center gap-2.5">
+            <span>⬇️</span> Telefon/Kompyuterga Yuklash
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premyeralar Bloki -->
+    <div class="w-full px-4 sm:px-8 lg:px-12 py-12">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-black text-white flex items-center gap-3">
+          <span class="w-3 h-7 bg-red-600 rounded-full inline-block"></span>
+          So‘nggi Premyeralar
+        </h2>
+        <button onclick="showPage('catalog')" class="text-sm text-red-500 font-extrabold hover:underline">Barchasini ko‘rish →</button>
+      </div>
+      <div id="homeMoviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <!-- JS to'ldiradi -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== 2-SAHIFA: KATALOG VA JANRLAR ==================== -->
+  <main id="page-catalog" class="page-view hidden flex-1 w-full px-4 sm:px-8 lg:px-12 py-12">
+    <div class="mb-8">
+      <h1 class="text-3xl font-black text-white flex items-center gap-3">
+        <span class="w-3 h-8 bg-red-600 rounded-full inline-block"></span>
+        To‘liq Kino Katalogi
+      </h1>
+      <p class="text-sm text-zinc-400 mt-1.5">Barcha janrlar, maxsus kodlar va yuqori sifatdagi filmlar to‘plami</p>
+    </div>
+
+    <!-- Janrlar Filtri (Katta va qulay) -->
+    <div class="flex items-center gap-3 overflow-x-auto py-3 no-scrollbar mb-10 border-b border-zinc-800/80 w-full" id="genreContainer">
+      <button onclick="filterGenre('Barchasi')" id="btn-genre-Barchasi" class="genre-btn active px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-red-600 text-white shadow-xl shadow-red-600/30 transition">Barchasi</button>
+      <button onclick="filterGenre('Jangari')" id="btn-genre-Jangari" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Jangari</button>
+      <button onclick="filterGenre('Komediya')" id="btn-genre-Komediya" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Komediya</button>
+      <button onclick="filterGenre('Fantastika')" id="btn-genre-Fantastika" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Fantastika</button>
+      <button onclick="filterGenre('Dahshat')" id="btn-genre-Dahshat" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Dahshat</button>
+      <button onclick="filterGenre('Drama')" id="btn-genre-Drama" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Drama</button>
+      <button onclick="filterGenre('Sarguzasht')" id="btn-genre-Sarguzasht" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Sarguzasht</button>
+      <button onclick="filterGenre('Multfilm')" id="btn-genre-Multfilm" class="genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition">Multfilm</button>
+    </div>
+
+    <!-- Katalog Grid -->
+    <div id="catalogMoviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <!-- JS to'ldiradi -->
+    </div>
+  </main>
+
+  <!-- ==================== 3-SAHIFA: SAQLANGANLAR ==================== -->
+  <main id="page-saved" class="page-view hidden flex-1 w-full px-4 sm:px-8 lg:px-12 py-12">
+    <div class="mb-8">
+      <h1 class="text-3xl font-black text-white flex items-center gap-3">
+        <span class="w-3 h-8 bg-red-600 rounded-full inline-block"></span>
+        Saqlangan Kinolar
+      </h1>
+      <p class="text-sm text-zinc-400 mt-1.5">Keyinroq tomosha qilish uchun saqlab qo‘ygan filmlaringiz</p>
+    </div>
+    <div id="savedMoviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <!-- JS to'ldiradi -->
+    </div>
+  </main>
+
+  <!-- ==================== 4-SAHIFA: ADMIN PANEL ==================== -->
+  <main id="page-admin" class="page-view hidden flex-1 w-full px-4 sm:px-8 lg:px-12 py-12">
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
+      <div>
+        <h1 class="text-3xl font-black text-white flex items-center gap-3">
+          <span>👑</span> Admin Boshqaruv Markazi
+        </h1>
+        <p class="text-sm text-zinc-400 mt-1.5">Sayt va Telegram Bot uchun yagona boshqaruv tizimi</p>
+      </div>
+      <span class="px-5 py-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-bold">Admin: Husan Ashirov</span>
+    </div>
+
+    <!-- Analitika -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8 text-sm">
+      <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl">
+        <span class="text-zinc-400 font-semibold">Jami Kinolar:</span>
+        <h3 id="statTotalMovies" class="text-4xl font-black text-white mt-2">0</h3>
+      </div>
+      <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl">
+        <span class="text-zinc-400 font-semibold">Jami Ko‘rishlar:</span>
+        <h3 id="statTotalViews" class="text-4xl font-black text-red-500 mt-2">0</h3>
+      </div>
+      <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl col-span-2 sm:col-span-1">
+        <span class="text-zinc-400 font-semibold">Tizim Holati:</span>
+        <h3 class="text-4xl font-black text-emerald-400 mt-2">Faol 🟢</h3>
+      </div>
+    </div>
+
+    <!-- Yangi Kino Yuklash Formasi -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10 text-sm space-y-5 max-w-4xl">
+      <h3 class="text-lg font-black text-white flex items-center gap-2.5">
+        <span>🎬</span> Yangi Kino Yuklash (10 GB gacha video fayllar qabul qilinadi)
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-zinc-400 mb-1.5 font-bold">MAXSUS KINO KODI:</label>
+          <input type="text" id="inpCode" placeholder="Masalan: 1 yoki 77" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white text-sm focus:border-red-600 outline-none">
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1.5 font-bold">KINO NOMI:</label>
+          <input type="text" id="inpTitle" placeholder="Masalan: Katta o'g'irlik" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white text-sm focus:border-red-600 outline-none">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-zinc-400 mb-1.5 font-bold">AFISHA (POSTER):</label>
+        <div class="flex items-center gap-5 mb-2.5">
+          <label class="flex items-center gap-2 text-zinc-300 cursor-pointer font-semibold"><input type="radio" name="posterType" id="radioPosterFile" checked> Rasm fayl yuklash</label>
+          <label class="flex items-center gap-2 text-zinc-300 cursor-pointer font-semibold"><input type="radio" name="posterType" id="radioPosterUrl"> Rasm URL havolasi</label>
+        </div>
+        <input type="file" id="inpPosterFile" accept="image/*" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3 text-zinc-300">
+        <input type="text" id="inpPosterUrl" placeholder="https://..." class="hidden w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white mt-2">
+      </div>
+
+      <div>
+        <label class="block text-zinc-400 mb-1.5 font-bold">KINO VIDEOSI:</label>
+        <div class="flex items-center gap-5 mb-2.5">
+          <label class="flex items-center gap-2 text-zinc-300 cursor-pointer font-semibold"><input type="radio" name="videoType" id="radioVideoFile" checked> Video fayl yuklash</label>
+          <label class="flex items-center gap-2 text-zinc-300 cursor-pointer font-semibold"><input type="radio" name="videoType" id="radioVideoUrl"> Video URL havolasi</label>
+        </div>
+        <input type="file" id="inpVideoFile" accept="video/*" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3 text-zinc-300">
+        <input type="text" id="inpVideoUrl" placeholder="https://..." class="hidden w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white mt-2">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-zinc-400 mb-1.5 font-bold">JANRLAR:</label>
+          <input type="text" id="inpGenre" placeholder="Jangari, Sarguzasht" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white text-sm focus:border-red-600 outline-none">
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1.5 font-bold">YILI:</label>
+          <input type="number" id="inpYear" value="2024" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white text-sm focus:border-red-600 outline-none">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-zinc-400 mb-1.5 font-bold">TAVSIF:</label>
+        <textarea id="inpDesc" rows="2" placeholder="Film haqida qisqacha ma'lumot..." class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 text-white text-sm focus:border-red-600 outline-none"></textarea>
+      </div>
+
+      <button id="btnSubmitMovie" onclick="submitMovieForm()" class="w-full py-4 bg-red-600 text-white font-black text-base rounded-2xl hover:bg-red-700 transition shadow-xl shadow-red-600/30">
+        Kino Portali va Telegram Botga Saqlash
+      </button>
+    </div>
+
+    <!-- Mavjud Kinolar Jadvali -->
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-sm w-full">
+      <h3 class="text-base font-bold text-white mb-6">📋 Mavjud Kinolar (O‘chirish paneli)</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-zinc-300">
+          <thead class="border-b border-zinc-800 text-zinc-500 font-extrabold uppercase text-xs">
+            <tr>
+              <th class="py-3.5">Afisha</th>
+              <th class="py-3.5">Nomi</th>
+              <th class="py-3.5">Kodi</th>
+              <th class="py-3.5">Ko‘rishlar</th>
+              <th class="py-3.5 text-right">O‘chirish</th>
+            </tr>
+          </thead>
+          <tbody id="adminMoviesTable" class="divide-y divide-zinc-800/60">
+            <!-- JS to'ldiradi -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-black border-t border-zinc-800/80 py-10 text-center text-sm text-zinc-500 w-full px-4 sm:px-8 lg:px-12">
+    <div class="w-full flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <span class="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center font-bold text-white text-sm">C</span>
+        <span class="font-extrabold text-white text-base">CinePortal Full-Stack</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="https://t.me/kino_mukammal" target="_blank" class="hover:text-white">Telegram Kanal</a>
+        <a href="https://instagram.com/kinolar.2027/" target="_blank" class="hover:text-white">Instagram (@kinolar.2027)</a>
+        <a href="https://t.me/kino_mukammal_bot" target="_blank" class="hover:text-white">Telegram Bot</a>
+        <a href="https://t.me/Husanashurov" target="_blank" class="text-amber-400 font-bold hover:underline">Admin (@Husanashurov)</a>
+      </div>
+      <p>© 2026 CinePortal. Barcha huquqlar himoyalangan.</p>
+    </div>
+  </footer>
+
+  <!-- ==================== CINE MIND KATTA AI MODALI ==================== -->
+  <div id="aiModal" class="hidden fixed bottom-6 right-6 z-50 w-[480px] sm:w-[540px] max-w-[95vw] h-[620px] max-h-[85vh] bg-zinc-900/95 border border-zinc-700/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl">
+    <div class="p-5 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center text-xl shadow-md">🤖</span>
+        <div>
+          <h3 class="font-black text-base text-white">Gemini Pro</h3>
+          <span class="block text-xs text-emerald-400 font-bold">● Kino va Intellektual Tahlilchi</span>
+        </div>
+      </div>
+      <button onclick="closeAiModal()" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center text-base">✕</button>
+    </div>
+
+    <!-- Tezkor Kayfiyat Tugmalari -->
+    <div class="px-5 py-2.5 bg-zinc-950/80 border-b border-zinc-800/60 flex items-center gap-2 overflow-x-auto no-scrollbar text-xs font-semibold">
+      <button onclick="quickMood('Zerikdim judayam 🥱')" class="px-3.5 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 whitespace-nowrap transition">Zerikdim 🥱</button>
+      <button onclick="quickMood('Menga kuch va motivatsiya kerak 💪')" class="px-3.5 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 whitespace-nowrap transition">Motivatsiya 💪</button>
+      <button onclick="quickMood('Miriqib kuladigan komediya ayt 😂')" class="px-3.5 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 whitespace-nowrap transition">Kulgili kino 😂</button>
+      <button onclick="quickMood('Yig\'latadigan ta\'sirli drama kerak 🥺')" class="px-3.5 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 whitespace-nowrap transition">Yig'latadigan 🥺</button>
+    </div>
+
+    <!-- Chat Xabarlari -->
+    <div id="aiChatBox" class="p-5 flex-1 overflow-y-auto space-y-4 text-sm">
+      <div class="bg-zinc-800/90 p-4 rounded-3xl text-zinc-200 max-w-[85%] border border-zinc-700/50 leading-relaxed">
+        👋 Assalomu alaykum! Men <b>CineMind</b> — sizning ruhiy holatingiz va kayfiyatingizga qarab kino tanlab beruvchi aqlli yordamchingizman. Bugun o'zingizni qanday his qilyapsiz?
+      </div>
+    </div>
+
+    <!-- Input Maydoni -->
+    <div class="p-4 bg-zinc-950 border-t border-zinc-800 flex gap-3">
+      <input type="text" id="aiInput" onkeydown="if(event.key==='Enter') sendAiMessage()" placeholder="Kayfiyatingizni yoki savolingizni yozing..." class="flex-1 bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3 text-sm text-white focus:outline-none focus:border-red-600">
+      <button onclick="sendAiMessage()" class="px-6 py-3 bg-red-600 text-white rounded-2xl text-sm font-black hover:bg-red-700 transition shadow-lg shadow-red-600/30">➤</button>
+    </div>
+  </div>
+
+  <!-- ==================== PLEYER MODALI ==================== -->
+  <div id="playerModal" class="hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-5xl bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl flex flex-col">
+      <div class="p-5 bg-zinc-950 flex items-center justify-between border-b border-zinc-800">
+        <div>
+          <h3 id="playerMovieTitle" class="text-lg font-black text-white">Kino</h3>
+          <span id="playerMovieCode" class="text-xs text-amber-400 font-bold">Kod: 0</span>
+        </div>
+        <button onclick="closePlayerModal()" class="w-9 h-9 rounded-full bg-zinc-800 text-white flex items-center justify-center hover:bg-red-600 transition">✕</button>
+      </div>
+
+      <div class="w-full aspect-video bg-black flex items-center justify-center relative">
+        <video id="mainVideoPlayer" class="w-full h-full" controls autoplay></video>
+      </div>
+
+      <div class="p-5 bg-zinc-950 flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xs text-zinc-400 font-bold">Sifat:</span>
+          <button onclick="setQuality('1080p')" class="quality-btn px-4 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold">1080p Full HD</button>
+          <button onclick="setQuality('720p')" class="quality-btn px-4 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-xs hover:text-white">720p HD</button>
+          <button onclick="setQuality('480p')" class="quality-btn px-4 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-xs hover:text-white">480p SD</button>
+        </div>
+        <a id="btnDirectDownload" href="#" download class="px-7 py-3 rounded-2xl bg-red-600 text-white text-xs font-black hover:bg-red-700 transition flex items-center gap-2 shadow-xl shadow-red-600/30">
+          <span>⬇️</span> Telefon yoki Kompyuterga Yuklab Olish (HD)
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAJBURIY OBUNA MODALI ==================== -->
+  <div id="subGateModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-7 shadow-2xl relative text-center">
+      <button onclick="closeSubGate()" class="absolute top-5 right-5 text-zinc-400 hover:text-white">✕</button>
+      <div class="w-16 h-16 bg-red-600/20 text-red-500 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-4">⚠️</div>
+      <h3 class="text-xl font-black text-white">Kinoni ko‘rish uchun obuna bo‘ling!</h3>
+      <p class="text-xs text-zinc-400 mt-2 mb-6">Kinoni bepul tomosha qilish va xotiraga yuklab olish uchun quyidagi rasmiy kanallarimizga a'zo bo‘ling:</p>
+
+      <div class="space-y-3 mb-6 text-sm font-bold">
+        <a href="https://t.me/kino_mukammal" target="_blank" class="w-full py-3.5 rounded-2xl bg-blue-600 text-white flex items-center justify-center gap-2.5 hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">
+          <span>📢</span> 1. Telegram Kanalimiz
+        </a>
+        <a href="https://instagram.com/kinolar.2027/" target="_blank" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white flex items-center justify-center gap-2.5 hover:opacity-90 transition shadow-lg shadow-pink-600/20">
+          <span>📸</span> 2. Instagram Sahifamiz
+        </a>
+        <a href="https://t.me/kino_mukammal_bot" target="_blank" class="w-full py-3.5 rounded-2xl bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center gap-2.5 hover:bg-zinc-700 transition">
+          <span>🤖</span> 3. Telegram Botimiz
+        </a>
+      </div>
+
+      <div class="text-left bg-zinc-950 p-4 rounded-2xl border border-zinc-800 mb-5">
+        <label class="block text-xs text-zinc-400 mb-1.5 font-semibold">Telegram username'ingizni kiriting:</label>
+        <input type="text" id="inpSubTgUsername" placeholder="@username" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-red-600">
+        <p id="subGateError" class="text-red-500 text-xs mt-2 hidden"></p>
+      </div>
+
+      <button id="btnVerifySubGate" onclick="submitVerifySubGate()" class="w-full py-3.5 bg-red-600 text-white text-sm font-black rounded-2xl hover:bg-red-700 transition shadow-xl shadow-red-600/30">
+        ✅ Obunani Tekshirish va Kinoni Ko‘rish
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== AUTH MODALI ==================== -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-7 shadow-2xl relative">
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-zinc-400 hover:text-white">✕</button>
+      <h3 class="text-xl font-black text-white mb-2 text-center">Tizimga Kirish</h3>
+      
+      <div class="my-5 flex justify-center">
+        <div id="g_id_onload"
+             data-client_id="928039017418-ncvibcnkhf8llt339nvmdn40d8shqnds.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="sign_in_with" data-shape="pill"></div>
+      </div>
+
+      <div class="relative flex py-2 items-center">
+        <div class="flex-grow border-t border-zinc-800"></div>
+        <span class="flex-shrink mx-2 text-xs text-zinc-500 uppercase font-semibold">Yoki Email orqali</span>
+        <div class="flex-grow border-t border-zinc-800"></div>
+      </div>
+
+      <div class="space-y-4 text-sm mt-3">
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Email:</label>
+          <input type="email" id="authEmail" placeholder="admin@kino.uz" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3 text-white">
+        </div>
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Parol:</label>
+          <input type="password" id="authPassword" placeholder="••••••••" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-3 text-white">
+        </div>
+        <button onclick="submitEmailLogin()" class="w-full py-3 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition">
+          Kirish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIKASI -->
+  <script>
+    let allMovies = [];
+    let selectedGenre = 'Barchasi';
+    let pendingAction = null;
+    let currentUser = JSON.parse(localStorage.getItem('cine_user') || 'null');
+    let savedMovieCodes = JSON.parse(localStorage.getItem('cine_saved_movies') || '[]');
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
+      
+      const target = document.getElementById(`page-${pageId}`);
+      const tab = document.getElementById(`tab-${pageId}`);
+      if (target) target.classList.remove('hidden');
+      if (tab) tab.classList.add('nav-active');
+
+      if (pageId === 'saved') renderSavedMovies();
+      if (pageId === 'admin') loadAdminData();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('radioPosterFile').onchange = () => {
+      document.getElementById('inpPosterFile').classList.remove('hidden');
+      document.getElementById('inpPosterUrl').classList.add('hidden');
+    };
+    document.getElementById('radioPosterUrl').onchange = () => {
+      document.getElementById('inpPosterFile').classList.add('hidden');
+      document.getElementById('inpPosterUrl').classList.remove('hidden');
+    };
+    document.getElementById('radioVideoFile').onchange = () => {
+      document.getElementById('inpVideoFile').classList.remove('hidden');
+      document.getElementById('inpVideoUrl').classList.add('hidden');
+    };
+    document.getElementById('radioVideoUrl').onchange = () => {
+      document.getElementById('inpVideoFile').classList.add('hidden');
+      document.getElementById('inpVideoUrl').classList.remove('hidden');
+    };
+
+    function checkAdminState() {
+      if (currentUser && currentUser.isAdmin) {
+        document.getElementById('tab-admin').classList.remove('hidden');
+        document.getElementById('authContainer').innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-amber-400 font-extrabold">👑 ${currentUser.name}</span>
+            <button onclick="logout()" class="text-xs text-zinc-500 hover:text-white font-bold">Chiqish</button>
+          </div>
+        `;
+      } else if (currentUser) {
+        document.getElementById('tab-admin').classList.add('hidden');
+        document.getElementById('authContainer').innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-zinc-300 font-bold">👤 ${currentUser.name}</span>
+            <button onclick="logout()" class="text-xs text-zinc-500 hover:text-white font-bold">Chiqish</button>
+          </div>
+        `;
+      } else {
+        document.getElementById('tab-admin').classList.add('hidden');
+      }
+      updateSavedBadge();
+    }
+
+    function updateSavedBadge() {
+      document.getElementById('savedCountBadge').innerText = savedMovieCodes.length;
+    }
+
+    async function handleGoogleLogin(response) {
+      try {
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        const profile = JSON.parse(jsonPayload);
+
+        const email = profile.email;
+        const name = profile.name || email.split('@')[0];
+        const isAdmin = (email === 'hashurov948@gmail.com');
+
+        currentUser = { name, email, isAdmin };
+        localStorage.setItem('cine_user', JSON.stringify(currentUser));
+        checkAdminState();
+        closeAuthModal();
+        alert(`Xush kelibsiz, ${name}!`);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+
+    async function submitEmailLogin() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+
+      if (!email || !password) {
+        alert("Email va parolni kiriting!");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.user) {
+          currentUser = data.user;
+          localStorage.setItem('cine_user', JSON.stringify(currentUser));
+          checkAdminState();
+          closeAuthModal();
+          alert(`Muvaffaqiyatli kirdingiz: ${currentUser.name}`);
+        } else {
+          alert("Kirishda xatolik!");
+        }
+      } catch (err) {
+        alert("Server bilan bog'lanishda xato!");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('cine_user');
+      currentUser = null;
+      location.reload();
+    }
+
+    async function loadMovies() {
+      try {
+        const res = await fetch('/api/movies');
+        const data = await res.json();
+        allMovies = Array.isArray(data) ? data : [];
+        renderMovies(allMovies);
+      } catch (e) {
+        console.error('Kinolarni yuklashda xatolik:', e);
+      }
+    }
+
+    function createMovieCardHTML(m) {
+      const isSaved = savedMovieCodes.includes(String(m.code));
+      return `
+        <div class="group relative bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 hover:border-red-600/50 transition duration-300 flex flex-col cursor-pointer shadow-lg" onclick="playMovie('${m.code}')">
+          <div class="aspect-[2/3] w-full overflow-hidden relative bg-zinc-950">
+            <img src="${m.poster_url || 'https://via.placeholder.com/300x450'}" alt="${m.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://via.placeholder.com/300x450'">
+            <div class="absolute top-3 right-3 bg-black/85 backdrop-blur-md px-3 py-1 rounded-xl text-xs font-black text-amber-400 flex items-center gap-1 border border-amber-400/20 shadow-md">
+              🔑 ${m.code}
+            </div>
+            <button onclick="event.stopPropagation(); toggleSaveMovie('${m.code}')" class="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/80 text-white flex items-center justify-center text-sm hover:bg-red-600 transition shadow-md">
+              ${isSaved ? '★' : '☆'}
+            </button>
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+              <span class="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center text-2xl shadow-xl shadow-red-600/50">▶</span>
+            </div>
+          </div>
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="font-extrabold text-base text-zinc-100 line-clamp-1 group-hover:text-red-500 transition">${m.title}</h3>
+              <p class="text-xs text-zinc-400 font-semibold mt-1">${m.genre || 'Badiiy'} • ${m.year || 2024}</p>
+            </div>
+            <div class="mt-4 flex items-center justify-between text-xs text-zinc-500 pt-3 border-t border-zinc-800/80 font-bold">
+              <span>👁 ${m.views || 0}</span>
+              <button onclick="event.stopPropagation(); likeMovie('${m.code}')" class="flex items-center gap-1 hover:text-red-500 transition">
+                👍 <span id="like-count-${m.code}">${m.likes || 0}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMovies(movies) {
+      const homeGrid = document.getElementById('homeMoviesGrid');
+      if (homeGrid) {
+        homeGrid.innerHTML = movies.slice(0, 12).map(m => createMovieCardHTML(m)).join('') || '<p class="col-span-full py-12 text-center text-zinc-500 font-bold">Hozircha kinolar mavjud emas</p>';
+      }
+
+      const catGrid = document.getElementById('catalogMoviesGrid');
+      if (catGrid) {
+        const filtered = selectedGenre === 'Barchasi'
+          ? movies
+          : movies.filter(m => (m.genre || '').toLowerCase().includes(selectedGenre.toLowerCase()));
+        catGrid.innerHTML = filtered.map(m => createMovieCardHTML(m)).join('') || '<p class="col-span-full py-12 text-center text-zinc-500 font-bold">Ushbu janrda kinolar yo‘q</p>';
+      }
+    }
+
+    function renderSavedMovies() {
+      const grid = document.getElementById('savedMoviesGrid');
+      if (!grid) return;
+      const saved = allMovies.filter(m => savedMovieCodes.includes(String(m.code)));
+      if (saved.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-20 text-center text-zinc-500">
+            <p class="text-5xl mb-4">⭐</p>
+            <p class="text-lg text-zinc-300 font-bold">Hozircha saqlangan kinolar yo‘q</p>
+            <p class="text-xs text-zinc-500 mt-1">Katalogdagi kinolarning yulduzchasini bosib saqlab qo‘yishingiz mumkin</p>
+          </div>
+        `;
+        return;
+      }
+      grid.innerHTML = saved.map(m => createMovieCardHTML(m)).join('');
+    }
+
+    function toggleSaveMovie(code) {
+      const cStr = String(code);
+      if (savedMovieCodes.includes(cStr)) {
+        savedMovieCodes = savedMovieCodes.filter(c => c !== cStr);
+      } else {
+        savedMovieCodes.push(cStr);
+      }
+      localStorage.setItem('cine_saved_movies', JSON.stringify(savedMovieCodes));
+      updateSavedBadge();
+      renderMovies(allMovies);
+      if (!document.getElementById('page-saved').classList.contains('hidden')) {
+        renderSavedMovies();
+      }
+    }
+
+    function filterGenre(genre) {
+      selectedGenre = genre;
+      document.querySelectorAll('.genre-btn').forEach(btn => {
+        btn.className = "genre-btn px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition";
+      });
+      const activeBtn = document.getElementById(`btn-genre-${genre}`);
+      if (activeBtn) {
+        activeBtn.className = "genre-btn active px-6 py-3 rounded-full text-sm font-bold whitespace-nowrap bg-red-600 text-white shadow-xl shadow-red-600/30 transition";
+      }
+      renderMovies(allMovies);
+    }
+
+    function searchMovies() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const filtered = allMovies.filter(m => 
+        (m.title || '').toLowerCase().includes(q) || 
+        String(m.code).includes(q)
+      );
+      renderMovies(filtered);
+    }
+
+    function checkSubGate(actionCallback) {
+      if (currentUser && currentUser.isAdmin) { actionCallback(); return; }
+      if (localStorage.getItem('cine_verified_tg')) { actionCallback(); return; }
+      pendingAction = actionCallback;
+      document.getElementById('subGateModal').classList.remove('hidden');
+    }
+
+    function closeSubGate() {
+      document.getElementById('subGateModal').classList.add('hidden');
+      pendingAction = null;
+    }
+
+    async function submitVerifySubGate() {
+      const inp = document.getElementById('inpSubTgUsername');
+      const val = inp.value.trim().replace('@', '');
+      const btn = document.getElementById('btnVerifySubGate');
+      const err = document.getElementById('subGateError');
+
+      if (!val) {
+        err.innerText = "Telegram username'ingizni kiriting!";
+        err.classList.remove('hidden');
+        return;
+      }
+
+      btn.innerText = "Tekshirilmoqda...";
+      btn.disabled = true;
+      err.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/check-sub', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegram_username: val })
+        });
+        const d = await res.json();
+        if (d.subscribed) {
+          localStorage.setItem('cine_verified_tg', val);
+          if (d.isAdmin) {
+            currentUser = { name: "Husan", email: "hashurov948@gmail.com", isAdmin: true };
+            localStorage.setItem('cine_user', JSON.stringify(currentUser));
+            checkAdminState();
+          }
+          closeSubGate();
+          alert("✅ Obuna tasdiqlandi!");
+          if (pendingAction) { pendingAction(); pendingAction = null; }
+        } else {
+          err.innerText = d.message || "Kanalga a'zo bo'lmadingiz!";
+          err.classList.remove('hidden');
+        }
+      } catch (e) {
+        err.innerText = "Bog'lanishda xato!";
+        err.classList.remove('hidden');
+      } finally {
+        btn.innerText = "✅ Obunani Tekshirish va Kinoni Ko‘rish";
+        btn.disabled = false;
+      }
+    }
+
+    function playMovie(code) {
+      checkSubGate(() => {
+        const movie = allMovies.find(m => String(m.code) === String(code));
+        if (!movie) return;
+
+        document.getElementById('playerMovieTitle').innerText = `${movie.title} (${movie.year || 2024})`;
+        document.getElementById('playerMovieCode').innerText = `Kod: ${movie.code}`;
+        const video = document.getElementById('mainVideoPlayer');
+        video.src = movie.video_url || '';
+        video.play().catch(() => {});
+        
+        const downBtn = document.getElementById('btnDirectDownload');
+        downBtn.href = movie.video_url || '#';
+        downBtn.download = `${movie.title}.mp4`;
+
+        document.getElementById('playerModal').classList.remove('hidden');
+        fetch(`/api/movies/code/${movie.code}/view`, { method: 'POST' }).catch(() => {});
+      });
+    }
+
+    function downloadMovieDirect(code) {
+      checkSubGate(() => {
+        const movie = allMovies.find(m => String(m.code) === String(code));
+        if (!movie || !movie.video_url) return;
+        const a = document.createElement('a');
+        a.href = movie.video_url;
+        a.download = `${movie.title}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    }
+
+    function closePlayerModal() {
+      const video = document.getElementById('mainVideoPlayer');
+      video.pause();
+      video.src = '';
+      document.getElementById('playerModal').classList.add('hidden');
+    }
+
+    function setQuality(quality) {
+      document.querySelectorAll('.quality-btn').forEach(b => {
+        b.className = "quality-btn px-4 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-xs hover:text-white";
+      });
+      event.target.className = "quality-btn px-4 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold";
+      alert(`Pleyer ${quality} rejimiga o'tkazildi.`);
+    }
+
+  // Har bir foydalanuvchi faqat 1 marta layk bosishi:
+window.toggleLike = async function(movieCode, btnElement) {
+  const cleanCode = String(movieCode).trim();
+  const likedKey = 'cine_liked_movie_' + cleanCode;
+
+  // 1. Agar foydalanuvchi avval layk bosgan bo'lsa, qayta bosishni taqiqlash
+  if (localStorage.getItem(likedKey)) {
+    alert("Siz bu kinoga allaqachon layk bosgansiz! ❤️");
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/movies/' + encodeURIComponent(cleanCode) + '/like', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      // Brauzerga saqlab qo'yamiz (faqat 1 marta bosish kafolatlanadi)
+      localStorage.setItem(likedKey, 'true');
+
+      // Ekranda layk sonini yangilash
+      const countEls = document.querySelectorAll('.like-count-' + cleanCode);
+      countEls.forEach(el => el.textContent = data.likes);
+
+      // Tugma rangini qizil qilish
+      if (btnElement) {
+        btnElement.classList.add('text-rose-500');
+        const icon = btnElement.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-regular');
+          icon.classList.add('fa-solid');
+        }
+      }
+    } else {
+      alert(data.error || "Layk bosishda xatolik yuz berdi");
+    }
+  } catch (err) {
+    alert("Serverga ulanishda xatolik yuz berdi!");
+  }
+};
+
+    function openAiModal() { document.getElementById('aiModal').classList.remove('hidden'); }
+    function closeAiModal() { document.getElementById('aiModal').classList.add('hidden'); }
+
+    function quickMood(text) {
+      document.getElementById('aiInput').value = text;
+      sendAiMessage();
+    }
+
+    async function sendAiMessage() {
+      const inp = document.getElementById('aiInput');
+      const text = inp.value.trim();
+      if (!text) return;
+
+      const box = document.getElementById('aiChatBox');
+      box.innerHTML += `<div class="bg-red-600/30 p-3.5 rounded-3xl text-zinc-100 ml-auto max-w-[85%] text-right font-semibold leading-relaxed">${text}</div>`;
+      inp.value = '';
+      box.scrollTop = box.scrollHeight;
+
+      const tempId = `ai_load_${Date.now()}`;
+      box.innerHTML += `<div id="${tempId}" class="bg-zinc-800 p-3.5 rounded-2xl text-zinc-400 max-w-[85%] text-xs font-medium">Tahlil qilinmoqda...</div>`;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, userName: currentUser ? currentUser.name : 'Do\'stim' })
+        });
+        const d = await res.json();
+        document.getElementById(tempId)?.remove();
+        box.innerHTML += `<div class="bg-zinc-800/90 p-4 rounded-3xl text-zinc-100 max-w-[85%] border border-zinc-700/60 leading-relaxed">${d.reply || "Sizga qanday yordam bera olaman?"}</div>`;
+      } catch (err) {
+        document.getElementById(tempId)?.remove();
+        box.innerHTML += `<div class="bg-zinc-800/90 p-4 rounded-3xl text-zinc-100 max-w-[85%] leading-relaxed">Assalomu alaykum! Men Gemini — sizning shaxsiy sun'iy intellekt yordamchingizman. Qanday savolingiz bor?</div>`;
+      }
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function loadAdminData() {
+      try {
+        const res = await fetch('/api/admin/analytics');
+        const d = await res.json();
+        document.getElementById('statTotalMovies').innerText = d.totals?.total_movies || allMovies.length;
+        document.getElementById('statTotalViews').innerText = d.totals?.total_views || 0;
+      } catch (e) {}
+
+      const tbody = document.getElementById('adminMoviesTable');
+      if (!tbody) return;
+      tbody.innerHTML = allMovies.map(m => `
+        <tr class="hover:bg-zinc-950 transition">
+          <td class="py-3.5"><img src="${m.poster_url}" class="w-10 h-14 object-cover rounded-xl bg-zinc-800 shadow" onerror="this.src='https://via.placeholder.com/50'"></td>
+          <td class="py-3.5 font-bold text-white text-sm">${m.title}</td>
+          <td class="py-3.5 font-mono text-amber-400 font-black text-sm">${m.code}</td>
+          <td class="py-3.5 text-zinc-400 font-semibold">👁 ${m.views || 0}</td>
+          <td class="py-3.5 text-right">
+            <button onclick="deleteMovie('${m.code}')" class="px-4 py-2 rounded-xl bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white transition font-bold text-xs">
+              🗑 O‘chirish
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    window.deleteMovie = async function(movieCodeOrId) {
+  if (!confirm("Haqiqatan ham ushbu kinoni o'chirmoqchimisiz?")) return;
+  try {
+    const res = await fetch('/api/movies/' + encodeURIComponent(movieCodeOrId), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("Kino muvaffaqiyatli o'chirildi!");
+      window.location.reload(); // Sahifadagi kartochkani shu zahoti yo'qotish uchun
+    } else {
+      alert(data.error || "O'chirishda xatolik yuz berdi");
+    }
+  } catch (err) {
+    alert("Serverga ulanishda xato: " + err.message);
+  }
+};
+
+    async function deleteMovie(code) {
+      if (!confirm(`Haqiqatan ham ${code}-kodli kinoni sayt va botdan o'chirmoqchimisiz?`)) return;
+      try {
+        const res = await fetch(`/api/movies/code/${code}`, { method: 'DELETE' });
+        if (res.ok) {
+          alert("✅ Kino o'chirildi!");
+          await loadMovies();
+          loadAdminData();
+        } else {
+          alert("O'chirishda xatolik!");
+        }
+      } catch (e) {
+        alert("Server xatosi!");
+      }
+    }
+
+    async function submitMovieForm() {
+      const btn = document.getElementById('btnSubmitMovie');
+      const code = document.getElementById('inpCode').value.trim();
+      const title = document.getElementById('inpTitle').value.trim();
+
+      if (!code || !title) {
+        alert("Iltimos, kino kodi va nomini kiriting!");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "⏳ Tayyorlanmoqda...";
+
+      try {
+        let poster_url = document.getElementById('inpPosterUrl').value.trim();
+        const posterFile = document.getElementById('inpPosterFile').files[0];
+        if (document.getElementById('radioPosterFile').checked && posterFile) {
+          btn.innerText = "🖼 Afisha yuklanmoqda...";
+          const fd = new FormData();
+          fd.append('file', posterFile);
+          const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+          if (!upRes.ok) throw new Error("Afisha rasmini yuklab bo'lmadi!");
+          const upData = await upRes.json();
+          poster_url = upData.url;
+        }
+
+        let video_url = document.getElementById('inpVideoUrl').value.trim();
+        const videoFile = document.getElementById('inpVideoFile').files[0];
+        if (document.getElementById('radioVideoFile').checked && videoFile) {
+          btn.innerText = "🎥 Video yuklanmoqda (fayl hajmiga qarab kuting)...";
+          const fd = new FormData();
+          fd.append('file', videoFile);
+          const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+          if (!upRes.ok) throw new Error("Kino videosini yuklab bo'lmadi!");
+          const upData = await upRes.json();
+          video_url = upData.url;
+        }
+
+        btn.innerText = "💾 Bazaga saqlanmoqda...";
+        const saveRes = await fetch('/api/movies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            title,
+            genre: document.getElementById('inpGenre').value.trim(),
+            year: document.getElementById('inpYear').value.trim(),
+            description: document.getElementById('inpDesc').value.trim(),
+            poster_url,
+            video_url
+          })
+        });
+
+        const resData = await saveRes.json();
+        if (!saveRes.ok) {
+          throw new Error(resData.error || "Kino saqlashda xatolik yuz berdi!");
+        }
+
+        alert("✅ Film muvaffaqiyatli saqlandi! Botda ham ushbu kod darhol ishlaydi.");
+        await loadMovies();
+        loadAdminData();
+      } catch (err) {
+        alert("⚠️ " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Kino Portali va Telegram Botga Saqlash";
+      }
+    }
+
+    window.onload = () => {
+      checkAdminState();
+      loadMovies();
+    };
+  </script>
+</body>
+</html>
