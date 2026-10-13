@@ -21,8 +21,9 @@ CHANNEL_ID = "@kino_mukammal"
 CHANNEL_URL = "https://t.me/kino_mukammal"
 INSTAGRAM_URL = "https://instagram.com/kinolar.2027/"
 ADMIN_USERNAME = "Husanashurov"
-SITE_URL = os.getenv("SITE_URL", "http://localhost:5000")
-API_BASE = os.getenv("API_BASE", "http://localhost:5000/api")
+# Yangi jonli hosting manzili:
+SITE_URL = os.getenv("SITE_URL", "https://kino-sayt-jyqu.onrender.com")
+API_BASE = os.getenv("API_BASE", "https://kino-sayt-jyqu.onrender.com/api")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BANNER_PATH = os.path.join(BASE_DIR, "banner.jpg")
@@ -118,7 +119,7 @@ async def get_ai_response(user_prompt: str, user_name: str, is_admin: bool = Fal
     p = user_prompt.lower()
     if is_admin:
         if any(w in p for w in ["salom", "assalom"]):
-            return "Assalomu alaykum, Husan! 👑 Gemini Pro xizmatingizda. Portal statistikasi yoki kino tahlili bo'yicha qanday vazifani bajaramiz?"
+            return "Assalomu alaykum, Husan! 👑 Gemini Pro xizmatingizda. Qanday tahlil yoki vazifani bajaramiz?"
         if any(w in p for w in ["nma gap", "nima gap", "nm gap"]):
             return "Tinchlik, Husan! Portal va bot barqaror ishlamoqda."
         if any(w in p for w in ["qilyabsan", "qilyapsan"]):
@@ -141,6 +142,7 @@ async def cmd_start(message: types.Message):
         f"👇 Kerakli bo'limni tanlang yoki kino kodini yozing:"
     )
     buttons = [
+        [InlineKeyboardButton(text="🌐 Saytimizga Kirish", url=SITE_URL)],
         [InlineKeyboardButton(text="📢 Telegram Kanalimiz", url=CHANNEL_URL)],
         [InlineKeyboardButton(text="📸 Instagram Sahifamiz", url=INSTAGRAM_URL)],
         [InlineKeyboardButton(text="👑 Admin Bilan Bog'lanish", url=f"https://t.me/{ADMIN_USERNAME}")]
@@ -166,7 +168,7 @@ async def handle_verify_sub(call: types.CallbackQuery):
     else:
         await call.answer("⚠️ Kanalimizga a'zo bo'lmadingiz! Iltimos, obuna bo'ling.", show_alert=True)
 
-# 1. ADMIN VIDEO YUBORGANIDA: Afishasini oladi va SAYTGA HAM AVTOMATIK JOYLAYDI!
+# 1. ADMIN VIDEO YUBORGANIDA: Afishasini oladi va SAYTGA HAM AVTOMATIK QO'SHADI!
 @dp.message(F.video | F.document)
 async def handle_admin_video_upload(message: types.Message):
     global last_admin_file_id, last_admin_thumb_url
@@ -180,7 +182,6 @@ async def handle_admin_video_upload(message: types.Message):
 
     code = extract_movie_code(caption)
 
-    # Videoning kichik afishasini 0.1 soniyada yuklab olish
     thumb_url = ""
     if message.video and message.video.thumbnail:
         try:
@@ -196,10 +197,8 @@ async def handle_admin_video_upload(message: types.Message):
 
     if code:
         title_name = f"Kino #{code}"
-        # A) Mahalliy faylga yozish
         save_local_movie(code, file_id, title_name, "Badiiy", "2024", thumb_url)
 
-        # B) SAYT SERVERIGA AVTOMATIK QO'SHISH (Saytda darhol chiqadi!)
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=4)) as s:
                 await s.put(
@@ -216,9 +215,9 @@ async def handle_admin_video_upload(message: types.Message):
             pass
 
         await message.answer(
-            f"✅ <b>{code}-kodli kino botga saqlandi va SAYTGA HAM avtomatik qo'shildi!</b> 🌐🎬\n\n"
+            f"✅ <b>{code}-kodli kino botga saqlandi va SAYTIMIZGA HAM avtomatik qo'shildi!</b> 🌐🎬\n\n"
             f"🔹 <b>Botda:</b> <code>{code}</code> deb yozsangiz, video 0.1 soniyada chiqadi!\n"
-            f"🔹 <b>Saytda:</b> http://localhost:5000 da kino kartochkasi paydo bo'ldi!\n\n"
+            f"🔹 <b>Saytda:</b> {SITE_URL} da kino kartochkasi paydo bo'ldi!\n\n"
             f"💡 <i>Agar ushbu videoni saytdagi <b>1</b>-kodli kinoga ulamoqchi bo'lsangiz: shunchaki <code>/kod 1</code> deb yozing!</i>",
             parse_mode="HTML"
         )
@@ -230,7 +229,7 @@ async def handle_admin_video_upload(message: types.Message):
             parse_mode="HTML"
         )
 
-# 2. /kod <raqam> BUYRUG'I (Istalgan kodga ulash va saytga joylash):
+# 2. /kod <raqam> BUYRUG'I
 @dp.message(Command("kod"))
 async def handle_set_code_command(message: types.Message):
     global last_admin_file_id, last_admin_thumb_url
@@ -251,7 +250,6 @@ async def handle_set_code_command(message: types.Message):
     title_name = "ogirlik" if code == "1" else f"Kino #{code}"
     save_local_movie(code, last_admin_file_id, title_name, "Badiiy", "2024", last_admin_thumb_url)
 
-    # Saytga ham saqlash
     try:
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=4)) as s:
             await s.put(
@@ -283,9 +281,7 @@ async def send_movie_by_code(message: types.Message, code: str):
         await message.answer("⚠️ <b>Kinoni ko'rish uchun quyidagi kanallarga a'zo bo'ling:</b>", reply_markup=get_sub_gate_keyboard(), parse_mode="HTML")
         return
 
-    # 1. Avval mahalliy xotiradan olish (0.1 soniya!)
     cached = get_local_movie(clean_code)
-
     movie = None
     if cached:
         movie = {
@@ -296,7 +292,6 @@ async def send_movie_by_code(message: types.Message, code: str):
             "code": clean_code
         }
 
-    # 2. Agar mahalliy xotirada bo'lmasa, serverdan qidirish
     if not movie:
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=3)) as sess:
@@ -319,7 +314,15 @@ async def send_movie_by_code(message: types.Message, code: str):
             logger.error(f"Serverdan qidirish xatosi: {e}")
 
     if not movie:
-        await message.answer(f"❌ <b>{clean_code}-kodli kino topilmadi!</b>\n\n🌐 Saytimiz katalogidan qidiring: http://localhost:5000", parse_mode="HTML")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🌐 Saytimiz Katalogi", url=SITE_URL)]
+        ])
+        await message.answer(
+            f"❌ <b>{clean_code}-kodli kino topilmadi!</b>\n\n"
+            f"Saytimiz katalogidan qidirib ko'ring:",
+            reply_markup=kb,
+            parse_mode="HTML"
+        )
         return
 
     title = movie.get('title') or movie.get('name') or f"Kino #{clean_code}"
@@ -330,15 +333,17 @@ async def send_movie_by_code(message: types.Message, code: str):
     views = movie.get('views', 0)
     likes = movie.get('likes', 0)
 
+    # Matnda keraksiz xom havolalar yo'q, hamma narsa toza:
     caption = (
         f"🎬 <b>{title} ({year})</b>\n\n"
         f"🔑 <b>Kodi:</b> <code>{clean_code}</code>\n"
         f"📁 <b>Janri:</b> {genre}\n"
-        f"👁 <b>Ko'rishlar:</b> {views} | 👍 <b>Layklar:</b> {likes}\n\n"
-        f"🌐 <b>Saytda tomosha qilish:</b> http://localhost:5000/?code={clean_code}"
+        f"👁 <b>Ko'rishlar:</b> {views} | 👍 <b>Layklar:</b> {likes}"
     )
 
+    # Siz aytgandek eng tepada "Saytimizda Tomosha Qilish" TUGMASI (button):
     buttons = [
+        [InlineKeyboardButton(text="🌐 Saytimizda Tomosha Qilish", url=f"{SITE_URL}/?code={clean_code}")],
         [InlineKeyboardButton(text="📢 Telegram Kanal", url=CHANNEL_URL)],
         [InlineKeyboardButton(text="📸 Instagram Sahifa", url=INSTAGRAM_URL)],
         [InlineKeyboardButton(text="👑 Admin Bilan Bog'lanish", url=f"https://t.me/{ADMIN_USERNAME}")]
@@ -356,22 +361,19 @@ async def send_movie_by_code(message: types.Message, code: str):
         except Exception as e:
             logger.warning(f"File ID jo'natish xatosi: {e}")
 
-    # B) Agar video jo'natilmagan bo'lsa
     if not video_sent:
         await message.answer(
             f"🎬 <b>{title} ({year})</b>\n\n"
             f"🔑 <b>Kodi:</b> <code>{clean_code}</code>\n"
-            f"📁 <b>Janri:</b> {genre}\n\n"
-            f"🌐 <b>Kinoni saytimizda to'liq HD tomosha qiling:</b>\n"
-            f"http://localhost:5000/?code={clean_code}",
+            f"📁 <b>Janri:</b> {genre}",
             reply_markup=keyboard,
             parse_mode="HTML"
         )
 
-    # C) Yuklab olish ma'lumoti alohida chiqadi:
+    # B) Yuklab olish ma'lumotida ham jonli sayt manzili:
     download_info = (
-        f"⬇️ <b>Kinoni yuklab olish uchun saytimizga kiring:</b>\n\n"
-        f"🌐 <b>Sayt manzili:</b> http://localhost:5000/?code={clean_code}\n\n"
+        f"⬇️ <b>Kinoni to'liq HD sifatda yuklab olish uchun saytimizga kiring:</b>\n\n"
+        f"🌐 <b>Saytimiz:</b> {SITE_URL}/?code={clean_code}\n\n"
         f"📱 <b>Imkoniyatlar:</b>\n"
         f"• To'liq HD sifatda yuklash\n"
         f"• Telefon yoki kompyuter xotirasiga to'g'ridan-to'g'ri saqlash\n"
@@ -401,6 +403,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    
-    
-  
