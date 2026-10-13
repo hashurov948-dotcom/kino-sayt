@@ -157,6 +157,18 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Universal Kino Portali http://localhost:${PORT} da ishga tushdi!`);
   initDatabase();
 });
+// Telegram botni avtomatik birga ishga tushirish
+const { spawn } = require('child_process');
+const botScript = path.join(__dirname, '../telegram-bot/bot.py');
+if (fs.existsSync(botScript)) {
+  const pythonCmd = process.platform === 'win32' ? 'py' : 'python3';
+  const botProcess = spawn(pythonCmd, [botScript], {
+    stdio: 'inherit',
+    env: { ...process.env, API_BASE: `http://localhost:${PORT}/api` }
+  });
+  botProcess.on('error', (err) => console.warn('Bot xatosi:', err.message));
+  console.log('🤖 Telegram Bot server bilan birga muvaffaqiyatli ishga tushdi!');
+}
 
 server.timeout = 0;
 server.keepAliveTimeout = 1800000;
